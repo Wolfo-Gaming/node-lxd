@@ -6,7 +6,7 @@ A client for communicating with a local or remote instance of linux containers. 
 # Installing
 
 ```bash
-$ npm install --save node-lxd
+$ npm install --save @wolfogaming/node-lxd
 ```
 
 ## Getting Started ##
