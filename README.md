@@ -1,12 +1,12 @@
 
-[![npm version](https://badge.fury.io/js/node-lxd.svg)](https://badge.fury.io/js/node-lxd)
+# Node Lxd
 
 A client for communicating with a local or remote instance of linux containers. The interface is object-oriented, simple and uniform. Unrestrictive with an open MIT license.
 
 # Installing
 
 ```bash
-$ npm install --save node-lxd
+$ npm install --save @wolfogaming/node-lxd
 ```
 
 ## Getting Started ##
