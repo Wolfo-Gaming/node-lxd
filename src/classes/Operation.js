@@ -15,77 +15,77 @@ var WebSocket = require('ws-unix');
 var extend = require('util')._extend;
 
 // client
-var Operation = utils.class_('Operation', {
+class Operation {
   /**
    * @private
    */
-  _client: null,
+  _client= null
 
   /**
    * @private
    */
-  _started: false,
+  _started= false
 
   /**
    * @private
    */
-  _metadata: {},
+  _metadata= {}
 
   /**
    * Gets the metadata for this operation.
    * @returns {object}
    */
-  metadata: function() {
+  metadata= function() {
     return this._metadata;
-  },
+  }
 
   /**
    * Gets the id of the operation.
    * @returns {string}
    */
-  id: function() {
+  id= function() {
     return this._metadata.id;
-  },
+  }
 
   /**
    * Gets the class of operation.
    * @returns {string}
    */
-  class: function() {
+  class= function() {
     return this._metadata.class;
-  },
+  }
 
   /**
    * Gets the status or error.
    * @returns {string}
    */
-  status: function() {
+  status= function() {
     return this._metadata.status;
-  },
+  }
 
   /**
    * Gets the status code.
    * @returns {number}
    */
-  statusCode: function() {
+  statusCode= function() {
     return this._metadata.status_code;
-  },
+  }
 
   /**
    * Gets if the operation has started.
    * @returns {boolean}
    */
-  hasStarted: function() {
+  hasStarted= function() {
     return this._started;
-  },
+  }
 
   /**
    * Connects to the websocket of this operation (if available).
    * @param {string} secret
-   * @param {function} callback
+   * @param {function(Error, WebSocket)} callback
    * @returns {object|null}
    */
-  webSocket: function(secret, callback) {
+  webSocket= function(secret, callback) {
     if (this.class() == 'websocket') {
       // try and connect
       var ws = new WebSocket(
@@ -106,29 +106,29 @@ var Operation = utils.class_('Operation', {
       callback(new Error('The operation is not of websocket class'));
       return null;
     }
-  },
+  }
 
   /**
    * Processes the JSON data into the operation.
    * @param {object} data
    * @internal
    */
-  _process: function(data) {
+  _process= function(data) {
     // type
     this._started = true;
     this._metadata = data.metadata;
-  },
+  }
 
   /**
    * Creates an operation.
    * @param {Client} client
    */
-  constructor: function(client) {
+  constructor(client) {
     this._client = client;
     this._started = false;
     this._metadata = {};
-  },
-});
+  }
+}
 
 // export
 module.exports = Operation;
