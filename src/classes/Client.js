@@ -1,13 +1,4 @@
-/**
- *     __   _  __ ____
- *    / /  | |/ // __ \
- *   / /   |   // / / /
- *  / /___/   |/ /_/ /
- * /_____/_/|_/_____/
- *
- * @author Alan Doherty (BattleCrate Ltd.)
- * @license MIT
- */
+
 
 // requires
 var utils = require('../utils');
@@ -15,6 +6,7 @@ var url = require('url');
 var request = require('request');
 var Operation = require('./Operation');
 var OperationError = require('./OperationError');
+var Certificate = require('./Certificate')
 var Container = require('./Container');
 var TaskQueue = require('./utilities/TaskQueue');
 var Profile = require('./Profile');
@@ -96,7 +88,7 @@ class Client {
 
         for (var i = 0; i < body.length; i++) {
           // get container name
-          var name = body[i].split('/');
+          var finger = body[i].split('/');
           name = name[name.length - 1];
 
           // queue get operation or push name if lazy
@@ -149,6 +141,82 @@ class Client {
               callback(null, new Container(client, body));
             }
           });
+      }
+    });
+  }
+   /**
+   * Gets a container with the specified name.
+   * @param {boolean} lazy
+   * @param {function(Error, Certificate[]):void} callback
+   */
+  certificates= function (lazy, callback) {
+    // arguments
+    if (arguments.length == 1) {
+      callback = arguments[0];
+      lazy = false;
+    }
+
+    // request
+    var client = this;
+
+    this._request('GET /certificates', {}, function (err, body) {
+      if (err) {
+        callback(err);
+      } else {
+        // get queue
+        var getQueue = new TaskQueue();
+        var certificates = [];
+
+        for (var i = 0; i < body.length; i++) {
+          // get container name
+          var name = body[i].split('/');
+          name = name[name.length - 1];
+
+          // queue get operation or push name if lazy
+          if (lazy === true) {
+            certificates.push(name);
+          } else {
+            (function (name) {
+              getQueue.queue(function (done) {
+                client.certificate(name,
+                  function (err, certificate) {
+                    // push container, if we error we (assume) that the container
+                    // was deleted while downloading, so we don't break everything
+                    // by returning an error.
+                    if (!err)
+                    certificates.push(certificate);
+
+                    // done
+                    done();
+                  });
+              });
+            })(name);
+          }
+        }
+
+        // execute queue
+        getQueue.executeAll(function () {
+          callback(null, certificates);
+        });
+      }
+    });
+  }
+   /**
+   * Gets all profiles.
+   * @param {string} fingerprint
+   * @param {function(Error, Certificate):void} callback
+   */
+  certificate= function (fingerprint, callback) {
+    var client = this;
+
+    this._request('GET /certificates/' + fingerprint, {}, function (err, body) {
+      if (err) {
+        callback(err);
+      } else {
+    
+              body.state = state;
+              callback(null, new Certificate(client, body));
+
       }
     });
   }

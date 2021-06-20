@@ -10,6 +10,7 @@
  */
 
 // requires
+const exec = require('exec')
 var utils = require('../utils');
 var fs = require('fs');
 var Process = require('./Process');
@@ -209,7 +210,7 @@ class ContainerFS {
    * @param {string} path The path.
    * @returns {string}
    */
-  resolve= function(path) {
+  resolve(path) {
     var root = '/var/lib/lxd/containers/' + this._container.name() + '/rootfs';
 
     // add extra base
@@ -599,7 +600,60 @@ class Container {
       });
     });
   }
+  /**
+   * Installs the specified apt package to the container
+   * @param {string[]} package The packages to install.
+   * @param {function(Error):void} callback
+   */
+  install= function(package, callback) {
+    if (!package) {
+      throw new Error('No Package Specified!')
+    }
+    if (!callback) {
+      this.exec(['apt-get','update'], function(err, update) {
+        if (err != null) {
+          callback(err);
+          return;
+        }
+        
+       update.on("close", function() {
+           console.log("process closed");
+           this.exec(['apt-get','install'], function(err, process) {
+            if (err != null) {
+              callback(err);
+              return;
+            }
+        
+            process.on("close", function() {
+               console.log("process closed");
+               callback(null)
+            });
+          });
+        });
+      });
+      
+    } else {
 
+    }
+    
+  }
+  /**
+   * Proxies a port to the container
+   * @param {number} port The port to proxy.
+   * @param {function(Error, string):void} callback
+   */
+  proxy= function(from, to) {
+    if (!to) {
+      var to = from
+    }
+    exec(`lxc config device add ${this.name()} port${from} proxy listen=tcp:0.0.0.0:${to} connect=tcp:127.0.0.1:${from}`, function(err, out, code) {
+        if (!err) {
+          callback(null, out)
+        } else {
+          callback(err, out)
+        }
+    });
+  }
   /**
    * Gets the status or sets the state.
    * @param {string?} state
