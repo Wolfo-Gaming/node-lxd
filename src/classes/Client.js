@@ -10,7 +10,7 @@ var Certificate = require('./Certificate')
 var Container = require('./Container');
 var TaskQueue = require('./utilities/TaskQueue');
 var Profile = require('./Profile');
-
+const { spawn } = require('child_process');
 // the request id (for debugging)
 var requestId = 0;
 
@@ -18,20 +18,24 @@ var requestId = 0;
 class Client {
   /**
    * The request.js path for the API.
-   * @internal
+   * @private
    */
   _path = ''
 
   /**
    * The web socket path for the API.
-   * @internal
+   * @private
    */
   _wsPath = ''
-
+  /**
+   * If the FS is mounted
+   * @private
+   */
+  _mounted = false
   /**
    * The lxc info object, cached but not
    * guaranteed to be populated.
-   * @internal
+   * @private
    */
   _info = {}
 
@@ -59,16 +63,30 @@ class Client {
    * Gets if the client is local.
    * @returns {boolean}
    */
-  local = function () {
+  local () {
     return this._local;
   }
+  websocket() {
 
+  }
+  /**
+   * @param {?string} name 
+   */
+  getWarning(name) {
+    if (!name) {
+      this._request('GET /containers', {}, function (err, body) {
+        console.log(body)
+      })
+    } else {
+
+    }
+  }
   /**
    * Gets all containers.
    * @param {boolean?} lazy
    * @param {function(Error, Container[]):void} callback
    */
-  containers= function (lazy, callback) {
+  containers(lazy, callback) {
     // arguments
     if (arguments.length == 1) {
       callback = arguments[0];
@@ -126,7 +144,7 @@ class Client {
    * @param {string} name
    * @param {function(Error, Container):void} callback
    */
-  container= function (name, callback) {
+  container(name, callback) {
     var client = this;
 
     this._request('GET /containers/' + name, {}, function (err, body) {
@@ -149,7 +167,7 @@ class Client {
    * @param {boolean} lazy
    * @param {function(Error, Certificate[]):void} callback
    */
-  certificates= function (lazy, callback) {
+  certificates(lazy, callback) {
     // arguments
     if (arguments.length == 1) {
       callback = arguments[0];
@@ -206,7 +224,7 @@ class Client {
    * @param {string} fingerprint
    * @param {function(Error, Certificate):void} callback
    */
-  certificate= function (fingerprint, callback) {
+  certificate(fingerprint, callback) {
     var client = this;
 
     this._request('GET /certificates/' + fingerprint, {}, function (err, body) {
@@ -220,13 +238,32 @@ class Client {
       }
     });
   }
-
+  /**
+   * Mounts BTRFS image for fs interactions
+   * @param {string} name 
+   * @param {function(Error):void} callback
+   */
+  mount(name, callback) {
+    let err;
+    try {
+      const ls = spawn('mount', [`/var/snap/lxd/common/lxd/disks/${name}.img`, `/var/snap/lxd/common/lxd/storage-pools/${name}`], { shell: true })
+    } catch (error) {
+      err = error;
+    }
+    if (!err) {
+      this._mounted = true;
+      callback(null)
+    } else {
+      callback(err)
+    }
+;
+  }
   /**
    * Gets all profiles.
    * @param {boolean?} lazy
    * @param {function(Error, Profile[]):void} callback
    */
-  profiles= function (lazy, callback) {
+  profiles(lazy, callback) {
     // arguments
     if (arguments.length == 1) {
       callback = arguments[0];
@@ -318,12 +355,12 @@ class Client {
    * Creates a new container and starts it.
    * @param {string} name
    * @param {string} image
-   * @param {object?} config
-   * @param {string?} profile
-   * @param {function(Error, Container):void} callback
+   * @param {object?|function(Error, Container):void?} config
+   * @param {string?|function(Error, Container):void?} profile
+   * @param {function(Error, Container):void?} callback
    * @returns {Operation}
    */
-  launch= function (name, image, config, profile, callback) {
+  launch(name, image, config, profile, callback) {
     // callback
     callback = arguments[arguments.length - 1];
 
@@ -358,7 +395,7 @@ class Client {
    * @param {function(Error, Container):void} callback
    * @returns {Operation}
    */
-  create= function (name, image, config, profile, callback) {
+  create(name, image, config, profile, callback) {
     // callback
     callback = arguments[arguments.length - 1];
 
@@ -369,7 +406,7 @@ class Client {
       profile = 'default';
 
     if (typeof (callback) !== 'function')
-      callback = function () {};
+      callback () {};
 
     // check name length
     if (name.length == 0) {
@@ -415,7 +452,7 @@ class Client {
    * callback(err, info)
    * @param {function} callback
    */
-  info= function (callback) {
+  info(callback) {
     var client = this;
 
     this._request('GET /', {}, function (err, body) {
@@ -435,7 +472,7 @@ class Client {
    * @returns {Operation}
    * @private
    */
-  _request= function (path, params, wait, callback) {
+  _request(path, params, wait, callback) {
     // wait optionality
     if (arguments.length == 3) {
       callback = arguments[2];
@@ -444,7 +481,7 @@ class Client {
 
     // callback
     if (callback === undefined)
-      callback = function () {};
+      callback () {};
 
     // parse path
     var route = path.substring(path.indexOf(' ') + 1).trim();

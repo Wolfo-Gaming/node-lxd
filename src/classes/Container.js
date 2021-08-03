@@ -1,15 +1,4 @@
-/**
- *     __   _  __ ____
- *    / /  | |/ // __ \
- *   / /   |   // / / /
- *  / /___/   |/ /_/ /
- * /_____/_/|_/_____/
- *
- * @author Alan Doherty (BattleCrate Ltd.)
- * @license MIT
- */
 
-// requires
 const exec = require('exec')
 var utils = require('../utils');
 var fs = require('fs');
@@ -105,8 +94,39 @@ class ContainerFS {
     return fs.readdir(this.resolve(path), options, callback);
   }
 
-  readdirSync= function(path, options) {
-    return fs.readdirSync(this.resolve(path), options);
+  readdirSync= function(path) {
+    let Dirlist = []
+    fs.readdirSync(this.resolve(path)).forEach(file => {
+      var modeString = require('fs-mode-to-string');
+      var mimes = require('mime-types')
+      if (!fs.existsSync(folder + '/' + file)) return;
+      var l = fs.statSync(folder + '/' + file)
+      var x = {}
+
+      if (l.isDirectory()) {
+          var mime = 'inode/directory'
+      } else {
+          if (mimes.lookup(file) == false) {
+              var mime = 'text/plain'
+          } else {
+              var mime = mimes.lookup(file)
+          }
+
+      }
+
+      x.name = file.replace(/\s/g, '\ ');
+      x.created = l.ctime;
+      x.modified = l.atime;
+      x.mode = modeString(l);
+      x.mode_bits = l.mode;
+      x.size = l.size;
+      x.directory = l.isDirectory();
+      x.file = l.isFile();
+      x.symlink = false;
+      x.mime = mime
+      Dirlist.push(x)
+  })
+  return Dirlist
   }
 
   readFile= function(file, options, callback) {
@@ -250,6 +270,7 @@ class Container {
   /**
    * The filesystem wrapper, local only.
    * @public
+   * @type {ContainerFS}
    */
   fs= null
 
@@ -304,7 +325,7 @@ class Container {
   /**
    * Gets the container name or sets the container name.
    * @param {string?} name
-   * @param {function?} callback
+   * @param {function(Error?, string?)?} callback
    * @returns {string|undefined}
    */
   name= function(name, callback) {
@@ -321,7 +342,7 @@ class Container {
       this._client._request('POST /containers/' + name, {name: name},
         function(err, metadata) {
           if (err) {
-            callback(err);
+            callback(err, null);
           } else {
             container._metadata.name = name;
             callback(null, name);
@@ -362,7 +383,7 @@ class Container {
 
   /**
    * Gets the IPv4 address of this container.
-   * @param {function?} callback The callback if waiting for ipv4.
+   * @param {function(Error?,string)?} callback The callback if waiting for ipv4.
    * @returns {string|undefined}
    */
   ipv4= function(callback) {
@@ -411,7 +432,7 @@ class Container {
 
   /**
    * Gets the IPv6 address of this container.
-   * @param {function?} callback
+   * @param {function(Error?,string)?} callback
    * @returns {string|undefined}
    */
   ipv6= function(callback) {
@@ -468,7 +489,7 @@ class Container {
 
   /**
    * Refreshes the container information.
-   * @param {function} callback
+   * @param {function(Error, Container)} callback
    */
   refresh= function(callback) {
     var container = this;
@@ -500,7 +521,7 @@ class Container {
    * Executes a terminal command on the container
    * @param {string[]} command The command with arguments.
    * @param {object?} env The environment data, optional.
-   * @param {function} callback
+   * @param {function(Error, ?string, ?string)} callback
    */
   run= function(command, env, callback) {
     // get closure arguments
@@ -639,7 +660,8 @@ class Container {
   }
   /**
    * Proxies a port to the container
-   * @param {number} port The port to proxy.
+   * @param {number} from
+   * @param {?number} to
    * @param {function(Error, string):void} callback
    */
   proxy= function(from, to) {
@@ -659,7 +681,7 @@ class Container {
    * @param {string?} state
    * @param {number?} timeout
    * @param {function?} callback
-   * @returns {object|undefined}
+   * @returns {object|null}
    */
   state= function(state, timeout, callback) {
     if (state === undefined) {
@@ -686,12 +708,13 @@ class Container {
             });
           }
         });
+      return null;
     }
   }
 
   /**
    * Starts the container.
-   * @param {function} callback
+   * @param {function(?Error)} callback
    */
   start= function(callback) {
     this.state('start', 30, callback);
@@ -699,7 +722,7 @@ class Container {
 
   /**
    * Stops the container.
-   * @param {function} callback
+   * @param {function(?Error)} callback
    */
   stop= function(callback) {
     this.state('stop', 30, callback);
@@ -707,7 +730,7 @@ class Container {
 
   /**
    * Restarts the container.
-   * @param {function} callback
+   * @param {function(?Error)} callback
    */
   restart= function(callback) {
     this.state('restart', 30, callback);
@@ -715,7 +738,7 @@ class Container {
 
   /**
    * Freezes the container.
-   * @param {function} callback
+   * @param {function(?Error)} callback
    */
   freeze= function(callback) {
     this.state('freeze', 30, callback);
@@ -723,7 +746,7 @@ class Container {
 
   /**
    * Freezes the container.
-   * @param {function} callback
+   * @param {function(?Error)} callback
    */
   unfreeze= function(callback) {
     this.state('unfreeze', 30, callback);
@@ -731,7 +754,7 @@ class Container {
 
   /**
    * Delete the container.
-   * @param {function} callback
+   * @param {function(?Error)} callback
    */
   delete= function(callback) {
     var deleteQueue = new TaskQueue();
@@ -858,7 +881,13 @@ class Container {
     this._metadata = metadata;
 
     // file system wrapper is local only
-    this.fs = client.local() ? new ContainerFS(this) : null;
+    if (client.local()) {
+      this.fs = new ContainerFS(this)
+    }
+    if (client.environment.storage == 'btrfs' && client._mounted) {
+      this.fs = new ContainerFS(this)
+    }
+    
   }
 }
 
