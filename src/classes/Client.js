@@ -69,18 +69,7 @@ class Client {
   websocket() {
 
   }
-  /**
-   * @param {?string} name 
-   */
-  getWarning(name) {
-    if (!name) {
-      this._request('GET /containers', {}, function (err, body) {
-        console.log(body)
-      })
-    } else {
 
-    }
-  }
   /**
    * Gets all containers.
    * @param {boolean?} lazy
@@ -406,7 +395,7 @@ class Client {
       profile = 'default';
 
     if (typeof (callback) !== 'function')
-      callback () {};
+      callback= function() {};
 
     // check name length
     if (name.length == 0) {
@@ -446,11 +435,84 @@ class Client {
       }
     });
   }
+  /**
+* @typedef {Object} Info
+* @property {Config} config
+* @property {string} api_extensions
+* @property {string} api_status
+* @property {string} api_version
+* @property {string} auth
+* @property {boolean} public
+* @property {string} auth_methods
+* @property {Environment} environment
+*/
+/**
+* @typedef {Object} Config
+* @property {string} core.https_address
+* @property {boolean} core.trust_password
+*/
+/**
+* @typedef {Object} Environment
+* @property {string} addresses
+* @property {string} architectures
+* @property {string} certificate
+* @property {string} certificate_fingerprint
+* @property {string} driver
+* @property {string} driver_version
+* @property {string} firewall
+* @property {string} kernel
+* @property {string} kernel_architecture
+* @property {KernelFeatures} kernel_features
+* @property {string} kernel_version
+* @property {LxcFeatures} lxc_features
+* @property {string} os_name
+* @property {string} os_version
+* @property {string} project
+* @property {string} server
+* @property {boolean} server_clustered
+* @property {string} server_name
+* @property {number} server_pid
+* @property {string} server_version
+* @property {string} storage
+* @property {string} storage_version
+* @property {StorageSupportedDrivers[]} storage_supported_drivers
+*/
+/**
+* @typedef {Object} KernelFeatures
+* @property {string} netnsid_getifaddrs
+* @property {string} seccomp_listener
+* @property {string} seccomp_listener_continue
+* @property {string} shiftfs
+* @property {string} uevent_injection
+* @property {string} unpriv_fscaps
+*/
+/**
+* @typedef {Object} LxcFeatures
+* @property {string} cgroup2
+* @property {string} devpts_fd
+* @property {string} idmapped_mounts_v2
+* @property {string} mount_injection_file
+* @property {string} network_gateway_device_route
+* @property {string} network_ipvlan
+* @property {string} network_l2proxy
+* @property {string} network_phys_macvlan_mtu
+* @property {string} network_veth_router
+* @property {string} pidfd
+* @property {string} seccomp_allow_deny_syntax
+* @property {string} seccomp_notify
+* @property {string} seccomp_proxy_send_notify_fd
+*/
+/**
+* @typedef {Object} StorageSupportedDrivers
+* @property {string} Name
+* @property {string} Version
+* @property {boolean} Remote
+*/
 
   /**
    * Gets information about the server.
    * callback(err, info)
-   * @param {function} callback
+   * @param {function(Error, Info)} callback
    */
   info(callback) {
     var client = this;
@@ -481,7 +543,7 @@ class Client {
 
     // callback
     if (callback === undefined)
-      callback () {};
+      callback = function() {};
 
     // parse path
     var route = path.substring(path.indexOf(' ') + 1).trim();
@@ -643,7 +705,7 @@ class Client {
       this._path = protocol + '//' + hostname;
       this._path += port ? ':' + port + '/' : '/';
     } else {
-      this._path = 'http://unix:/var/lib/lxd/unix.socket:/';
+      this._path = 'http://unix:/var/snap/lxd/common/lxd/unix.socket:/';
     }
 
     // websocket path
@@ -651,8 +713,9 @@ class Client {
       this._wsPath = 'ws://' + hostname;
       this._wsPath += port ? ':' + port + '/' : '/';
     } else {
-      this._wsPath = 'ws+unix:///var/lib/lxd/unix.socket:/';
+      this._wsPath = 'ws+unix:///var/snap/lxd/common/lxd/unix.socket:/';
     }
+
 
     if (authenticate && authenticate.cert && authenticate.key) {
       this._cert = authenticate.cert
