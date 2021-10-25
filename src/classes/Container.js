@@ -623,11 +623,11 @@ class Container {
   }
   /**
    * Installs the specified apt package to the container
-   * @param {string[]} package The packages to install.
+   * @param {string[]} packages The packages to install.
    * @param {function(Error):void} callback
    */
-  install= function(package, callback) {
-    if (!package) {
+  install= function(packages, callback) {
+    if (!packages) {
       throw new Error('No Package Specified!')
     }
     if (!callback) {
