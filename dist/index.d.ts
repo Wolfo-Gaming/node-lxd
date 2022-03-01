@@ -17,6 +17,7 @@ export declare type InstanceOptions = {
         url: string;
         protocol: string;
     };
+    type: string;
 };
 declare class Client {
     client: HTTP | UNIX;

@@ -91,7 +91,7 @@ class Client {
                         alias: options.image,
                         "server": options.imageServer.url ? options.imageServer.url : "https://images.linuxcontainers.org/",
                         "protocol": options.imageServer.protocol ? options.imageServer.protocol : "simplestreams"
-                    } }, options.raw));
+                    }, type: options.type ? options.type : "container" }, options.raw));
                 //console.log(response)
                 //@ts-expect-error
                 var res = JSON.parse(response);

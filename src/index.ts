@@ -15,7 +15,8 @@ export type InstanceOptions = {
     imageServer?: {
         url: string,
         protocol: string
-    }
+    },
+    type: string
 }
 class Client {
     client: HTTP | UNIX;
@@ -101,6 +102,7 @@ class Client {
                         "server": options.imageServer.url ? options.imageServer.url :"https://images.linuxcontainers.org/",
                         "protocol": options.imageServer.protocol ? options.imageServer.protocol : "simplestreams"
                     },
+                    type: options.type ? options.type : "container"
                     ...options.raw
                 })
                 //console.log(response)
