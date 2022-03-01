@@ -82,7 +82,11 @@ class Client {
         image: ImageAlias,
         raw?: any,
         description?: string,
-        profiles?: ["default"|string]
+        profiles?: ["default"|string],
+        imagesServer?: {
+            url: string,
+            protocol: string
+        }
     }): Promise<TypedEmitter<CreateEvents>> {
         return new Promise(async (resolve, reject) => {
 
@@ -94,8 +98,8 @@ class Client {
                     source: {
                         type: "image",
                         alias: options.image,
-                        "server": "https://images.linuxcontainers.org/",
-                        "protocol": "simplestreams"
+                        "server": options.imagesServer.url ? options.imagesServer.url :"https://images.linuxcontainers.org/",
+                        "protocol": options.imagesServer.protocol ? options.imagesServer.protocol : "simplestreams"
                     },
                     ...options.raw
                 })

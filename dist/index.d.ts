@@ -4,9 +4,10 @@ import { WebSocket } from 'ws';
 import { HTTP } from './classes/http';
 import { Instance } from './classes/instance';
 import { UNIX } from './classes/unix';
-import { ImageAlias, InstanceConfig } from './types/configs/instance';
+import { InstanceConfig } from './types/configs/instance';
 import { CreateEvents } from './types/types';
 import { Resources } from './types/types';
+import { ImageAlias } from './types/ImageAliases';
 declare class Client {
     client: HTTP | UNIX;
     caluclateUsingHyperthreading: boolean;

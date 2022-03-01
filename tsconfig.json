@@ -12,6 +12,8 @@
         "forceConsistentCasingInFileNames": true,
         "importHelpers": true,
         "noUnusedLocals": true,
+        "allowJs": true,
+        "checkJs": true
     },
     "include": [
         "src/**/*"
