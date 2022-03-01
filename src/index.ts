@@ -7,6 +7,17 @@ import { InstanceConfig } from './types/configs/instance';
 import { CreateEvents } from './types/types';
 import { Resources } from './types/types';
 import { ImageAlias } from './types/ImageAliases';
+export type InstanceOptions = {
+    config?: InstanceConfig,
+    image: string,
+    raw?: any,
+    description?: string,
+    profiles?: ["default"|string],
+    imageServer?: {
+        url: string,
+        protocol: string
+    }
+}
 class Client {
     client: HTTP | UNIX;
     caluclateUsingHyperthreading: boolean;
@@ -77,17 +88,7 @@ class Client {
             })
         })
     }
-    createInstance(name: string, options: {
-        config?: InstanceConfig,
-        image: ImageAlias,
-        raw?: any,
-        description?: string,
-        profiles?: ["default"|string],
-        imageServer?: {
-            url: string,
-            protocol: string
-        }
-    }): Promise<TypedEmitter<CreateEvents>> {
+    createInstance(name: string, options: InstanceOptions): Promise<TypedEmitter<CreateEvents>> {
         return new Promise(async (resolve, reject) => {
 
             try {
