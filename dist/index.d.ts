@@ -31,6 +31,10 @@ declare class Client {
         raw?: any;
         description?: string;
         profiles?: ["default" | string];
+        imagesServer?: {
+            url: string;
+            protocol: string;
+        };
     }): Promise<TypedEmitter<CreateEvents>>;
 }
 export { HTTP };
