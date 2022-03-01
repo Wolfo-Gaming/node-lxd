@@ -1,13 +1,13 @@
 {
-  "name": "lxd",
-  "version": "1.0.0",
-  "description": "",
+  "name": "@wolfogaming/node-lxd",
+  "version": "2.0.1",
   "main": "dist/index.js",
   "scripts": {
+    "fetch-types": "node util/types.js",
     "pack": "tsc",
     "test": "tsc && node test/test.js"
   },
-  "author": "",
+  "author": "wolfogaming",
   "license": "ISC",
   "dependencies": {
     "@types/ws": "^8.2.3",
@@ -16,5 +16,24 @@
     "tiny-typed-emitter": "^2.1.0",
     "tslib": "^2.3.1",
     "ws": "^8.5.0"
-  }
+  },
+  "types": "./dist/index.d.ts",
+  "directories": {
+    "test": "test"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Wolfo-Gaming/node-lxd.git"
+  },
+  "keywords": [
+    "lxd",
+    "lxd",
+    "client"
+  ],
+  "bugs": {
+    "url": "https://github.com/Wolfo-Gaming/node-lxd/issues"
+  },
+  "homepage": "https://github.com/Wolfo-Gaming/node-lxd#readme",
+  "description": ""
 }
