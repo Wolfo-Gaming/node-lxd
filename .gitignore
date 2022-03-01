@@ -1,2 +1,4 @@
 node_modules/
 auth/
+auth/lxd-webui.crt
+auth/lxd-webui.key
