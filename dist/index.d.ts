@@ -31,7 +31,7 @@ declare class Client {
         raw?: any;
         description?: string;
         profiles?: ["default" | string];
-        imagesServer?: {
+        imageServer?: {
             url: string;
             protocol: string;
         };

@@ -89,8 +89,8 @@ class Client {
                 var response = yield this.client.post('/1.0/instances', Object.assign({ name: name, config: options.config ? options.config : {}, description: options.description ? options.description : "", source: {
                         type: "image",
                         alias: options.image,
-                        "server": options.imagesServer.url ? options.imagesServer.url : "https://images.linuxcontainers.org/",
-                        "protocol": options.imagesServer.protocol ? options.imagesServer.protocol : "simplestreams"
+                        "server": options.imageServer.url ? options.imageServer.url : "https://images.linuxcontainers.org/",
+                        "protocol": options.imageServer.protocol ? options.imageServer.protocol : "simplestreams"
                     } }, options.raw));
                 //console.log(response)
                 //@ts-expect-error
