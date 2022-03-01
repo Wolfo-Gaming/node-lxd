@@ -6,7 +6,6 @@ import { UNIX } from './classes/unix';
 import { InstanceConfig } from './types/configs/instance';
 import { CreateEvents } from './types/types';
 import { Resources } from './types/types';
-import { ImageAlias } from './types/ImageAliases';
 export type InstanceOptions = {
     config?: InstanceConfig,
     image: string,
