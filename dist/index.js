@@ -44,7 +44,6 @@ class Client {
     fetchResources() {
         return new Promise((resolve, reject) => {
             this.client.get('/1.0/resources', {}).then((data) => {
-                // @ts-expect-error
                 resolve(JSON.parse(data));
             }).catch(error => {
                 reject(error);
@@ -62,7 +61,6 @@ class Client {
     fetchInstance(name) {
         return new Promise((resolve, reject) => {
             this.client.get('/1.0/instances/' + name).then(data => {
-                // @ts-expect-error
                 resolve(new instance_1.Instance(this, this.client, JSON.parse(data).metadata));
             }).catch(error => {
                 reject(error);
@@ -72,7 +70,6 @@ class Client {
     fetchInstances() {
         return new Promise((resolve, reject) => {
             this.client.get('/1.0/instances?recursion=1').then((data) => {
-                // @ts-expect-error
                 var res = JSON.parse(data);
                 var arr = res.metadata;
                 var result = [];
@@ -84,7 +81,7 @@ class Client {
         });
     }
     createInstance(name, options) {
-        return new Promise((resolve, reject) => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
+        return new Promise((resolve, reject) => tslib_1.__awaiter(this, void 0, void 0, function* () {
             try {
                 var response = yield this.client.post('/1.0/instances', Object.assign({ name: name, config: options.config ? options.config : {}, description: options.description ? options.description : "", source: {
                         type: "image",
@@ -93,7 +90,6 @@ class Client {
                         "protocol": options.imageServer.protocol ? options.imageServer.protocol : "simplestreams"
                     }, type: options.type ? options.type : "container" }, options.raw));
                 //console.log(response)
-                //@ts-expect-error
                 var res = JSON.parse(response);
                 if (res.type == "error") {
                     return reject(res.error);
@@ -103,7 +99,7 @@ class Client {
                 var operationID = res.metadata.id;
                 var self = this;
                 function listener(d) {
-                    return (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
+                    return tslib_1.__awaiter(this, void 0, void 0, function* () {
                         var data = JSON.parse(d.toString());
                         if (data.metadata.id == operationID) {
                             if (data.metadata.status == "Failure") {

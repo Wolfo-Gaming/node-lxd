@@ -5,11 +5,8 @@ const tiny_typed_emitter_1 = require("tiny-typed-emitter");
 class ExecEmitter extends tiny_typed_emitter_1.TypedEmitter {
     constructor(control, term, data) {
         super();
-        //@ts-expect-error
         this.operation = data.metadata.id;
-        //@ts-expect-error
         this.created_at = data.metadata.created_at;
-        //@ts-expect-error
         this.cancelable = data.metadata.may_cancel;
         this.control = control;
         this.term = term;
@@ -20,7 +17,6 @@ class ExecEmitter extends tiny_typed_emitter_1.TypedEmitter {
                 this.emit('exit');
             }
             else {
-                // @ts-expect-error
                 this.emit('data', data);
             }
         };
@@ -29,6 +25,10 @@ class ExecEmitter extends tiny_typed_emitter_1.TypedEmitter {
         };
         this.term.on('message', consoleListener);
         this.control.on('message', controlListener);
+    }
+    close() {
+        this.term.close();
+        this.control.close();
     }
     send(data) {
         this.term.send(data, { binary: true });

@@ -47,8 +47,19 @@ class Instance {
             name = 'lxc.log';
         return new Promise((resolve, reject) => {
             this.client.get("/1.0/instances/" + this.name() + "/logs/" + name).then(data => {
-                // @ts-expect-error
                 resolve(data);
+            }).catch(error => {
+                reject(error);
+            });
+        });
+    }
+    listLogs() {
+        return new Promise((resolve, reject) => {
+            this.client.get("/1.0/instances/" + this.name() + "/logs").then(data => {
+                var response = JSON.parse(data);
+                resolve(response.metadata.map((str) => {
+                    return (str.split('/')[str.split('/').length - 1]);
+                }));
             }).catch(error => {
                 reject(error);
             });
@@ -63,7 +74,6 @@ class Instance {
                 "name": name,
                 "optimized_storage": true
             }).then(data => {
-                //@ts-expect-error
                 var res = JSON.parse(data);
                 if (res.type == "error") {
                     return reject(res.error);
@@ -74,7 +84,7 @@ class Instance {
                 var self = this;
                 var backup_done = false;
                 function listener(d) {
-                    return (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
+                    return tslib_1.__awaiter(this, void 0, void 0, function* () {
                         var data = JSON.parse(d.toString());
                         if (data.metadata.id == operationID) {
                             console.log(data);
@@ -87,8 +97,7 @@ class Instance {
                                 backup_done = true;
                                 console.log(data.metadata.resources.backups[0].replace('/1.0/', '/1.0/instances/hah1s/'));
                                 var backup = yield self.client.get(data.metadata.resources.backups[0].replace('/1.0/', '/1.0/instances/hah1s/'));
-                                // @ts-expect-error
-                                var s = new backup_1.Backup(self.root, self.client, self, JSON.parse(backup).metadata);
+                                var s = new backup_1.Backup(self.client, self, JSON.parse(backup).metadata);
                                 waiter.emit("finished", s);
                                 events.removeAllListeners();
                                 events.close();
@@ -106,6 +115,8 @@ class Instance {
                 }
                 events.on('message', listener);
                 resolve(waiter);
+            }).catch(error => {
+                reject(error);
             });
         });
     }
@@ -115,33 +126,31 @@ class Instance {
                 version = "v4";
             if (!interfaceName)
                 interfaceName = "eth0";
-            this.client.get('/1.0/instances/' + this.meta.name + "/state").then((data) => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
-                //@ts-expect-error
+            this.client.get('/1.0/instances/' + this.meta.name + "/state").then((data) => tslib_1.__awaiter(this, void 0, void 0, function* () {
                 var response = JSON.parse(data);
                 if (version == "v4") {
                     var int = response.metadata.network[interfaceName];
-                    var ip = int.addresses.find(address => {
-                        //@ts-expect-error
+                    var ip = int.addresses.find((address) => {
                         return (address.scope == "global" && address.family == "inet");
                     });
                     resolve(ip);
                 }
                 if (version == "v6") {
                     var int = response.metadata.network[interfaceName];
-                    var ip = int.addresses.find(address => {
-                        //@ts-expect-error
+                    var ip = int.addresses.find((address) => {
                         return (address.scope == "global" && address.family == "inet6");
                     });
                     resolve(ip);
                 }
-            }));
+            })).catch(error => {
+                reject(error);
+            });
         });
     }
     fetchUsage() {
         return new Promise((resolve, reject) => {
-            this.client.get('/1.0/instances/' + this.meta.name + "/state").then((data) => (0, tslib_1.__awaiter)(this, void 0, void 0, function* () {
+            this.client.get('/1.0/instances/' + this.meta.name + "/state").then((data) => tslib_1.__awaiter(this, void 0, void 0, function* () {
                 var system_data = yield this.root.fetchResources();
-                //@ts-expect-error
                 var response = JSON.parse(data);
                 var cpu_ns = response.metadata.cpu.usage;
                 var memory_used = response.metadata.memory.usage;
@@ -156,11 +165,9 @@ class Instance {
                     var thread_multiplier = 2;
                 var multiplier = (100000 / cpuCount) * thread_multiplier;
                 var startTime = Date.now();
-                //@ts-expect-error
                 var u = JSON.parse(yield this.client.get("/1.0/instances/" + this.meta.name + "/state"));
                 console.log(u);
                 var usage1 = u.metadata.cpu.usage / 1000000000;
-                //@ts-expect-error
                 var usage2 = (JSON.parse(yield this.client.get("/1.0/instances/" + this.meta.name + "/state")).metadata.cpu.usage / 1000000000);
                 var cpu_usage = ((usage2 - usage1) / (Date.now() - startTime)) * multiplier;
                 if (cpu_usage > 100) {
@@ -195,7 +202,9 @@ class Instance {
                     network: interface_usage,
                     disk: u.metadata.disk
                 });
-            }));
+            })).catch(error => {
+                reject(error);
+            });
         });
     }
     /**
@@ -214,7 +223,6 @@ class Instance {
         return new Promise((resolve, reject) => {
             this.client.patch("/1.0/instances/" + this.meta.name, { config: config }).then(data => {
                 this.client.get("/1.0/instances/" + this.meta.name).then(ins => {
-                    // @ts-expect-error
                     resolve(new Instance(this.root, this.client, JSON.parse(ins).metadata));
                 }).catch(error => {
                     reject(error);
@@ -229,7 +237,6 @@ class Instance {
             this.client.post("/1.0/instances/" + this.meta.name, { name: name }).then(data => {
                 this.client.get("/1.0/instances/" + name).then(ins => {
                     console.log(ins);
-                    // @ts-expect-error
                     resolve(new Instance(this.root, this.client, JSON.parse(ins).metadata));
                 }).catch(error => {
                     reject(error);
@@ -255,7 +262,6 @@ class Instance {
                 "wait-for-websocket": true,
                 "width": options.width ? options.width : 0
             }).then(data => {
-                // @ts-expect-error
                 var response = JSON.parse(data);
                 var consolePath = response.operation + "/websocket?secret=" + response.metadata.metadata.fds["0"];
                 var controlPath = response.operation + "/websocket?secret=" + response.metadata.metadata.fds["control"];
@@ -268,6 +274,21 @@ class Instance {
                 }
                 var exec = new exec_1.ExecEmitter(controlWS, consoleWS, response);
                 resolve(exec);
+            }).catch(error => {
+                reject(error);
+            });
+        });
+    }
+    fetchBackup(name) {
+        return new Promise((resolve, reject) => {
+            this.client.get('/1.0/instances/' + this.name() + "/backups/" + name).then(data => {
+                console.log(data);
+                var response = JSON.parse(data);
+                if (response.status_code != 200)
+                    reject(new Error(response.error));
+                resolve(new backup_1.Backup(this.client, this, response.metadata));
+            }).catch(error => {
+                reject(error);
             });
         });
     }

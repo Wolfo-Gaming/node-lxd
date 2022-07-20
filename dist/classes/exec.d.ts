@@ -8,7 +8,8 @@ export declare class ExecEmitter extends TypedEmitter<ExecEvents> {
     operation: string;
     created_at: string;
     cancelable: boolean;
+    constructor(control: WebSocket, term: WebSocket, data: any);
+    close(): void;
     send(data: Buffer): void;
     sendControl(data: string): void;
-    constructor(control: WebSocket, term: WebSocket, data: {});
 }

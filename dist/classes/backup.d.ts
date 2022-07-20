@@ -1,11 +1,11 @@
-import { Client, HTTP, UNIX } from "..";
+import { HTTP, UNIX } from "..";
 import { BackupData } from "../types/responses/instance/backup";
 import { Instance } from "./instance";
 export declare class Backup {
     instance: Instance;
-    root: Client;
-    client: HTTP | UNIX;
+    private client;
     backup: BackupData;
-    constructor(root: Client, client: HTTP | UNIX, instance: Instance, backupData: BackupData);
+    constructor(client: HTTP | UNIX, instance: Instance, backupData: BackupData);
     rename(name: string): Promise<Backup>;
+    delete(): Promise<void>;
 }

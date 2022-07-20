@@ -4,6 +4,7 @@ import { TypedEmitter } from "tiny-typed-emitter";
 import { BackupEvents, InstanceIP } from "../types/types";
 import { ExecEmitter } from "./exec";
 import { InstanceUsage } from "../types/responses/instance/usage";
+import { Backup } from "./backup";
 export declare class Instance {
     private client;
     meta: InstanceMeta;
@@ -30,7 +31,15 @@ export declare class Instance {
      */
     fetchStatus(): InstanceStatus;
     fetchLogs(name?: string): Promise<string>;
-    createBackup(name: string, options?: {}): Promise<TypedEmitter<BackupEvents>>;
+    listLogs(): Promise<string[]>;
+    createBackup(name: string, options?: {
+        compression_algorithm?: string;
+        container_only?: boolean;
+        expires_at?: string;
+        instance_only?: boolean;
+        name?: string;
+        optimized_storage?: boolean;
+    }): Promise<TypedEmitter<BackupEvents>>;
     fetchIP(version?: "v4" | "v6", interfaceName?: string): Promise<InstanceIP>;
     fetchUsage(): Promise<InstanceUsage>;
     /**
@@ -46,4 +55,5 @@ export declare class Instance {
         height?: number;
         width?: number;
     }): Promise<ExecEmitter>;
+    fetchBackup(name: string): Promise<Backup>;
 }

@@ -6,20 +6,9 @@ import { UNIX } from './classes/unix';
 import { InstanceConfig } from './types/configs/instance';
 import { CreateEvents } from './types/types';
 import { Resources } from './types/types';
-export type InstanceOptions = {
-    config?: InstanceConfig,
-    image: string,
-    raw?: any,
-    description?: string,
-    profiles?: ["default"|string],
-    imageServer?: {
-        url: string,
-        protocol: string
-    },
-    type: string
-}
+
 class Client {
-    client: HTTP | UNIX;
+    private client: HTTP | UNIX;
     caluclateUsingHyperthreading: boolean;
     constructor(url: string, options: { type: "http" | "unix", rejectUnauthorized?: boolean, cert?: Buffer, key?: Buffer, caluclateUsingHyperthreading?: boolean }) {
         if (!options.caluclateUsingHyperthreading || options.caluclateUsingHyperthreading == true) {
@@ -50,7 +39,7 @@ class Client {
     fetchResources(): Promise<Resources> {
         return new Promise((resolve, reject) => {
             this.client.get('/1.0/resources', {}).then((data) => {
-                // @ts-expect-error
+                
                 resolve(JSON.parse(data))
             }).catch(error => {
                 reject(error)
@@ -67,7 +56,7 @@ class Client {
     fetchInstance(name: string): Promise<Instance> {
         return new Promise((resolve, reject) => {
             this.client.get('/1.0/instances/' + name).then(data => {
-                // @ts-expect-error
+                
                 resolve(new Instance(this, this.client, JSON.parse(data).metadata))
             }).catch(error => {
                 reject(error)
@@ -77,7 +66,7 @@ class Client {
     fetchInstances(): Promise<Instance[]> {
         return new Promise((resolve,reject) => {
             this.client.get('/1.0/instances?recursion=1').then((data) => {
-                // @ts-expect-error
+                
                 var res = JSON.parse(data)
                 var arr = res.metadata;
                 var result = []
@@ -88,7 +77,18 @@ class Client {
             })
         })
     }
-    createInstance(name: string, options: InstanceOptions): Promise<TypedEmitter<CreateEvents>> {
+    createInstance(name: string, options: {
+        config?: InstanceConfig,
+        image: string,
+        raw?: any,
+        description?: string,
+        profiles?: ["default"|string],
+        imageServer?: {
+            url: string,
+            protocol: string
+        },
+        type: string
+    }): Promise<TypedEmitter<CreateEvents>> {
         return new Promise(async (resolve, reject) => {
 
             try {
@@ -102,11 +102,11 @@ class Client {
                         "server": options.imageServer.url ? options.imageServer.url :"https://images.linuxcontainers.org/",
                         "protocol": options.imageServer.protocol ? options.imageServer.protocol : "simplestreams"
                     },
-                    type: options.type ? options.type : "container"
+                    type: options.type ? options.type : "container",
                     ...options.raw
                 })
                 //console.log(response)
-                //@ts-expect-error
+                
                 var res = JSON.parse(response)
                 if (res.type == "error") {
                     return reject(res.error)

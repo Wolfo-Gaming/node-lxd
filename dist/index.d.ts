@@ -7,20 +7,8 @@ import { UNIX } from './classes/unix';
 import { InstanceConfig } from './types/configs/instance';
 import { CreateEvents } from './types/types';
 import { Resources } from './types/types';
-export declare type InstanceOptions = {
-    config?: InstanceConfig;
-    image: string;
-    raw?: any;
-    description?: string;
-    profiles?: ["default" | string];
-    imageServer?: {
-        url: string;
-        protocol: string;
-    };
-    type: string;
-};
 declare class Client {
-    client: HTTP | UNIX;
+    private client;
     caluclateUsingHyperthreading: boolean;
     constructor(url: string, options: {
         type: "http" | "unix";
@@ -36,7 +24,18 @@ declare class Client {
     connectEvents(type?: "operation" | "logging" | "lifecycle"): WebSocket;
     fetchInstance(name: string): Promise<Instance>;
     fetchInstances(): Promise<Instance[]>;
-    createInstance(name: string, options: InstanceOptions): Promise<TypedEmitter<CreateEvents>>;
+    createInstance(name: string, options: {
+        config?: InstanceConfig;
+        image: string;
+        raw?: any;
+        description?: string;
+        profiles?: ["default" | string];
+        imageServer?: {
+            url: string;
+            protocol: string;
+        };
+        type: string;
+    }): Promise<TypedEmitter<CreateEvents>>;
 }
 export { HTTP };
 export { UNIX };

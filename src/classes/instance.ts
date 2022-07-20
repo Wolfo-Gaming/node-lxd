@@ -50,14 +50,34 @@ export class Instance {
         if (!name) name = 'lxc.log';
         return new Promise((resolve,reject) => {
             this.client.get("/1.0/instances/"+  this.name() + "/logs/" + name).then(data => {
-                // @ts-expect-error
+                
                 resolve(data)
             }).catch(error => {
                 reject(error)
             })
         })
     }
-    createBackup(name: string, options?: {}): Promise<TypedEmitter<BackupEvents>> {
+    listLogs(): Promise<string[]> {
+        return new Promise((resolve,reject) => {
+            this.client.get("/1.0/instances/"+  this.name() + "/logs").then(data => {
+                
+                var response = JSON.parse(data)
+                resolve(response.metadata.map((str: string) => {
+                    return (str.split('/')[str.split('/').length - 1])
+                }))
+            }).catch(error => {
+                reject(error)
+            })
+        })
+    }
+    createBackup(name: string, options?: {
+        compression_algorithm?: string,
+        container_only?: boolean,
+        expires_at?: string,
+        instance_only?: boolean,
+        name?: string,
+        optimized_storage?: boolean
+      }): Promise<TypedEmitter<BackupEvents>> {
         return new Promise((resolve,reject) => {
             this.client.post('/1.0/instances/'+this.meta.name+'/backups', {
                 "compression_algorithm": "gzip",
@@ -66,7 +86,7 @@ export class Instance {
                 "name": name,
                 "optimized_storage": true
               }).then(data => {
-                              //@ts-expect-error
+                              
             var res = JSON.parse(data)
             if (res.type == "error") {
                 return reject(res.error)
@@ -89,8 +109,8 @@ export class Instance {
                         backup_done = true;
                         console.log(data.metadata.resources.backups[0].replace('/1.0/', '/1.0/instances/hah1s/'))
                         var backup = await self.client.get(data.metadata.resources.backups[0].replace('/1.0/', '/1.0/instances/hah1s/'))
-                        // @ts-expect-error
-                        var s = new Backup(self.root, self.client, self, JSON.parse(backup).metadata)
+                        
+                        var s = new Backup(self.client, self, JSON.parse(backup).metadata)
                         waiter.emit("finished", s)
                         events.removeAllListeners()
                         events.close()
@@ -106,7 +126,9 @@ export class Instance {
             }
             events.on('message', listener)
             resolve(waiter)
-              })
+              }).catch(error => {
+                reject(error)
+            })
 
         })
     }
@@ -115,14 +137,14 @@ export class Instance {
             if (!version) version = "v4";
             if (!interfaceName) interfaceName = "eth0"
             this.client.get('/1.0/instances/' + this.meta.name + "/state").then(async data => {
-                //@ts-expect-error
+                
               var response = JSON.parse(data);
               if (version == "v4") {
                 var int: {
                     addresses: []
                 } = response.metadata.network[interfaceName]
-                var ip = int.addresses.find(address => {
-                    //@ts-expect-error
+                var ip = int.addresses.find((address: any) => {
+                    
                     return (address.scope == "global" && address.family == "inet")
                 })
                 resolve(ip)
@@ -131,12 +153,14 @@ export class Instance {
                 var int: {
                     addresses: []
                 } = response.metadata.network[interfaceName]
-                var ip = int.addresses.find(address => {
-                    //@ts-expect-error
+                var ip = int.addresses.find((address: any) => {
+                    
                     return (address.scope == "global" && address.family == "inet6")
                 })
                 resolve(ip)
               }
+            }).catch(error => {
+                reject(error)
             })
         })
 
@@ -146,7 +170,7 @@ export class Instance {
             this.client.get('/1.0/instances/' + this.meta.name + "/state").then(async data => {
                 var system_data = await this.root.fetchResources()
 
-                //@ts-expect-error
+                
                 var response = JSON.parse(data);
                 var cpu_ns: number = response.metadata.cpu.usage;
                 var memory_used = response.metadata.memory.usage;
@@ -160,11 +184,11 @@ export class Instance {
 
                 var multiplier = (100000 / cpuCount) * thread_multiplier
                 var startTime = Date.now()
-                //@ts-expect-error
+                
                 var u = JSON.parse(await this.client.get("/1.0/instances/" + this.meta.name + "/state"))
                 console.log(u)
                 var usage1 = u.metadata.cpu.usage / 1000000000
-                //@ts-expect-error
+                
                 var usage2 = (JSON.parse(await this.client.get("/1.0/instances/" + this.meta.name + "/state")).metadata.cpu.usage / 1000000000)
                 var cpu_usage = ((usage2 - usage1) / (Date.now() - startTime)) * multiplier
                 if (cpu_usage > 100) {
@@ -206,6 +230,8 @@ export class Instance {
                     network: interface_usage,
                     disk: u.metadata.disk
                 })
+            }).catch(error => {
+                reject(error)
             })
         })
     }
@@ -225,7 +251,7 @@ export class Instance {
         return new Promise((resolve, reject) => {
             this.client.patch("/1.0/instances/" + this.meta.name, { config: config }).then(data => {
                 this.client.get("/1.0/instances/" + this.meta.name).then(ins => {
-                    // @ts-expect-error
+                    
                     resolve(new Instance(this.root, this.client, JSON.parse(ins).metadata))
                 }).catch(error => {
                     reject(error)
@@ -240,7 +266,7 @@ export class Instance {
             this.client.post("/1.0/instances/" + this.meta.name, { name: name }).then(data => {
                 this.client.get("/1.0/instances/" + name).then(ins => {
                     console.log(ins)
-                    // @ts-expect-error
+                    
                     resolve(new Instance(this.root, this.client, JSON.parse(ins).metadata))
                 }).catch(error => {
                     reject(error)
@@ -264,7 +290,7 @@ export class Instance {
                 "wait-for-websocket": true,
                 "width": options.width ? options.width : 0
             }).then(data => {
-                // @ts-expect-error
+                
                 var response = JSON.parse(data);
                 var consolePath = response.operation + "/websocket?secret=" + response.metadata.metadata.fds["0"];
                 var controlPath = response.operation + "/websocket?secret=" + response.metadata.metadata.fds["control"];
@@ -276,6 +302,21 @@ export class Instance {
                 }
                 var exec = new ExecEmitter(controlWS, consoleWS, response)
                 resolve(exec)
+            }).catch(error => {
+                reject(error)
+            })
+        })
+    }
+    fetchBackup(name: string): Promise<Backup> {
+        return new Promise((resolve, reject) => {
+            this.client.get('/1.0/instances/' + this.name() + "/backups/" + name).then(data => {
+                console.log(data)
+                
+                var response = JSON.parse(data)
+                if (response.status_code != 200) reject(new Error(response.error))
+               resolve(new Backup(this.client, this, response.metadata))
+            }).catch(error => {
+                reject(error)
             })
         })
     }
