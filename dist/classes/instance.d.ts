@@ -41,6 +41,31 @@ export declare class Instance {
         optimized_storage?: boolean;
     }): Promise<TypedEmitter<BackupEvents>>;
     fetchIP(version?: "v4" | "v6", interfaceName?: string): Promise<InstanceIP>;
+    fetchNetworks(): Promise<{
+        [key: string]: {
+            "addresses": {
+                "family": string;
+                "address": string;
+                "netmask": string;
+                "scope": string;
+            }[];
+            "counters": {
+                "bytes_received": number;
+                "bytes_sent": number;
+                "packets_received": number;
+                "packets_sent": number;
+                "errors_received": number;
+                "errors_sent": number;
+                "packets_dropped_outbound": number;
+                "packets_dropped_inbound": number;
+            };
+            "hwaddr": string;
+            "host_name": string;
+            "mtu": number;
+            "state": string;
+            "type": string;
+        };
+    }>;
     fetchUsage(): Promise<InstanceUsage>;
     /**
      * Set instance status

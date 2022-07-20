@@ -1,5 +1,5 @@
 export interface InstanceUsage {
-    state: string;
+    state: "Running" | "Stopped" | "Frozen" | "Error";
     pid: number;
     processes: number;
     cpu: {

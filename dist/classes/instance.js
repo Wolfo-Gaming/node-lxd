@@ -147,6 +147,15 @@ class Instance {
             });
         });
     }
+    fetchNetworks() {
+        return new Promise((resolve, reject) => {
+            this.client.get('/1.0/instances/' + this.meta.name + "/state").then((data) => tslib_1.__awaiter(this, void 0, void 0, function* () {
+                resolve(JSON.parse(data).metadata.network);
+            })).catch(error => {
+                reject(error);
+            });
+        });
+    }
     fetchUsage() {
         return new Promise((resolve, reject) => {
             this.client.get('/1.0/instances/' + this.meta.name + "/state").then((data) => tslib_1.__awaiter(this, void 0, void 0, function* () {

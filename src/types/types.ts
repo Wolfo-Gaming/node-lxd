@@ -12,6 +12,16 @@ export {
     OperationEvent,
     Resources
 }
+export interface BackupEvents {
+    "finished": (backup: Backup) => void,
+    "error": (error: Error) => void,
+    "progress": (progress: {
+        /** Backup progress, Example: 111.97MB */
+        done: number,
+        /** Backup speed, Example: 9.99MB/s */
+        speed:number
+    }) => void
+}
 export interface ClientEvents {
     "operation": (event: OperationEvent) => void,
     "logging": (event: LoggingEvent) => void,
@@ -32,14 +42,4 @@ export interface CreateEvents {
     "finished": (instance: Instance) => void,
     "error": (error: Error) => void,
     "progress": (progress: number) => void
-}
-export interface BackupEvents {
-    "finished": (backup: Backup) => void,
-    "error": (error: Error) => void,
-    "progress": (progress: {
-        /** Backup progress, Example: 111.97MB */
-        done: number,
-        /** Backup speed, Example: 9.99MB/s */
-        speed:number
-    }) => void
 }

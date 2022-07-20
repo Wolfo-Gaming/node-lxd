@@ -48,9 +48,9 @@ export class Instance {
     }
     fetchLogs(name?: string): Promise<string> {
         if (!name) name = 'lxc.log';
-        return new Promise((resolve,reject) => {
-            this.client.get("/1.0/instances/"+  this.name() + "/logs/" + name).then(data => {
-                
+        return new Promise((resolve, reject) => {
+            this.client.get("/1.0/instances/" + this.name() + "/logs/" + name).then(data => {
+
                 resolve(data)
             }).catch(error => {
                 reject(error)
@@ -58,9 +58,9 @@ export class Instance {
         })
     }
     listLogs(): Promise<string[]> {
-        return new Promise((resolve,reject) => {
-            this.client.get("/1.0/instances/"+  this.name() + "/logs").then(data => {
-                
+        return new Promise((resolve, reject) => {
+            this.client.get("/1.0/instances/" + this.name() + "/logs").then(data => {
+
                 var response = JSON.parse(data)
                 resolve(response.metadata.map((str: string) => {
                     return (str.split('/')[str.split('/').length - 1])
@@ -77,100 +77,133 @@ export class Instance {
         instance_only?: boolean,
         name?: string,
         optimized_storage?: boolean
-      }): Promise<TypedEmitter<BackupEvents>> {
-        return new Promise((resolve,reject) => {
-            this.client.post('/1.0/instances/'+this.meta.name+'/backups', {
+    }): Promise<TypedEmitter<BackupEvents>> {
+        return new Promise((resolve, reject) => {
+            this.client.post('/1.0/instances/' + this.meta.name + '/backups', {
                 "compression_algorithm": "gzip",
                 "container_only": false,
                 "instance_only": false,
                 "name": name,
                 "optimized_storage": true
-              }).then(data => {
-                              
-            var res = JSON.parse(data)
-            if (res.type == "error") {
-                return reject(res.error)
-            }
-            var waiter = new TypedEmitter<BackupEvents>()
-            var events = this.root.connectEvents("operation")
-            var operationID = res.metadata.id
-            var self = this
-            var backup_done = false;
-            async function listener(d: RawData) {
-                var data = JSON.parse(d.toString())
-                if (data.metadata.id == operationID) {
-                    console.log(data)
-                    if (data.metadata.status == "Failure") {
-                        waiter.emit("error", new Error(data.metadata.err))
-                        events.removeAllListeners()
-                        events.close()
-                    }
-                    if (data.metadata.status == "Success") {
-                        backup_done = true;
-                        console.log(data.metadata.resources.backups[0].replace('/1.0/', '/1.0/instances/hah1s/'))
-                        var backup = await self.client.get(data.metadata.resources.backups[0].replace('/1.0/', '/1.0/instances/hah1s/'))
-                        
-                        var s = new Backup(self.client, self, JSON.parse(backup).metadata)
-                        waiter.emit("finished", s)
-                        events.removeAllListeners()
-                        events.close()
-                    }
-                    console.log(JSON.stringify(data))
-                    if (!data.metadata.metadata) return;
-                    if (data.metadata.metadata.create_backup_progress  && backup_done == false) {
-                        var done = data.metadata.metadata.create_backup_progress.match(/(.*)B /)[0].replace(' ','')
-                        var speed = data.metadata.metadata.create_backup_progress.match(/B ((.*))/)[1].replace('(','').replace(')','')
-                        waiter.emit("progress", {speed,done})
+            }).then(data => {
+
+                var res = JSON.parse(data)
+                if (res.type == "error") {
+                    return reject(res.error)
+                }
+                var waiter = new TypedEmitter<BackupEvents>()
+                var events = this.root.connectEvents("operation")
+                var operationID = res.metadata.id
+                var self = this
+                var backup_done = false;
+                async function listener(d: RawData) {
+                    var data = JSON.parse(d.toString())
+                    if (data.metadata.id == operationID) {
+                        console.log(data)
+                        if (data.metadata.status == "Failure") {
+                            waiter.emit("error", new Error(data.metadata.err))
+                            events.removeAllListeners()
+                            events.close()
+                        }
+                        if (data.metadata.status == "Success") {
+                            backup_done = true;
+                            console.log(data.metadata.resources.backups[0].replace('/1.0/', '/1.0/instances/hah1s/'))
+                            var backup = await self.client.get(data.metadata.resources.backups[0].replace('/1.0/', '/1.0/instances/hah1s/'))
+
+                            var s = new Backup(self.client, self, JSON.parse(backup).metadata)
+                            waiter.emit("finished", s)
+                            events.removeAllListeners()
+                            events.close()
+                        }
+                        console.log(JSON.stringify(data))
+                        if (!data.metadata.metadata) return;
+                        if (data.metadata.metadata.create_backup_progress && backup_done == false) {
+                            var done = data.metadata.metadata.create_backup_progress.match(/(.*)B /)[0].replace(' ', '')
+                            var speed = data.metadata.metadata.create_backup_progress.match(/B ((.*))/)[1].replace('(', '').replace(')', '')
+                            waiter.emit("progress", { speed, done })
+                        }
                     }
                 }
-            }
-            events.on('message', listener)
-            resolve(waiter)
-              }).catch(error => {
+                events.on('message', listener)
+                resolve(waiter)
+            }).catch(error => {
                 reject(error)
             })
 
         })
     }
-    fetchIP(version?: "v4"|"v6", interfaceName?: string): Promise<InstanceIP> {
-        return new Promise((resolve,reject) => {
+    fetchIP(version?: "v4" | "v6", interfaceName?: string): Promise<InstanceIP> {
+        return new Promise((resolve, reject) => {
             if (!version) version = "v4";
             if (!interfaceName) interfaceName = "eth0"
             this.client.get('/1.0/instances/' + this.meta.name + "/state").then(async data => {
-                
-              var response = JSON.parse(data);
-              if (version == "v4") {
-                var int: {
-                    addresses: []
-                } = response.metadata.network[interfaceName]
-                var ip = int.addresses.find((address: any) => {
-                    
-                    return (address.scope == "global" && address.family == "inet")
-                })
-                resolve(ip)
-              }
-              if (version == "v6") {
-                var int: {
-                    addresses: []
-                } = response.metadata.network[interfaceName]
-                var ip = int.addresses.find((address: any) => {
-                    
-                    return (address.scope == "global" && address.family == "inet6")
-                })
-                resolve(ip)
-              }
+
+                var response = JSON.parse(data);
+                if (version == "v4") {
+                    var int: {
+                        addresses: []
+                    } = response.metadata.network[interfaceName]
+                    var ip = int.addresses.find((address: any) => {
+
+                        return (address.scope == "global" && address.family == "inet")
+                    })
+                    resolve(ip)
+                }
+                if (version == "v6") {
+                    var int: {
+                        addresses: []
+                    } = response.metadata.network[interfaceName]
+                    var ip = int.addresses.find((address: any) => {
+
+                        return (address.scope == "global" && address.family == "inet6")
+                    })
+                    resolve(ip)
+                }
             }).catch(error => {
                 reject(error)
             })
         })
 
     }
+    fetchNetworks(): Promise<{
+        [key: string]: {
+            "addresses": {
+                "family": string,
+                "address": string,
+                "netmask": string,
+                "scope": string
+            }[],
+            "counters": {
+                "bytes_received": number,
+                "bytes_sent": number,
+                "packets_received": number,
+                "packets_sent": number,
+                "errors_received": number,
+                "errors_sent": number,
+                "packets_dropped_outbound": number,
+                "packets_dropped_inbound": number
+            },
+            "hwaddr": string,
+            "host_name": string,
+            "mtu": number,
+            "state": string,
+            "type": string
+        }
+    }> {
+        return new Promise((resolve, reject) => {
+            this.client.get('/1.0/instances/' + this.meta.name + "/state").then(async data => {
+                resolve(JSON.parse(data).metadata.network)
+            }).catch(error => {
+                reject(error)
+            })
+        })
+    }
     fetchUsage(): Promise<InstanceUsage> {
         return new Promise((resolve, reject) => {
             this.client.get('/1.0/instances/' + this.meta.name + "/state").then(async data => {
                 var system_data = await this.root.fetchResources()
 
-                
+
                 var response = JSON.parse(data);
                 var cpu_ns: number = response.metadata.cpu.usage;
                 var memory_used = response.metadata.memory.usage;
@@ -184,11 +217,11 @@ export class Instance {
 
                 var multiplier = (100000 / cpuCount) * thread_multiplier
                 var startTime = Date.now()
-                
+
                 var u = JSON.parse(await this.client.get("/1.0/instances/" + this.meta.name + "/state"))
                 console.log(u)
                 var usage1 = u.metadata.cpu.usage / 1000000000
-                
+
                 var usage2 = (JSON.parse(await this.client.get("/1.0/instances/" + this.meta.name + "/state")).metadata.cpu.usage / 1000000000)
                 var cpu_usage = ((usage2 - usage1) / (Date.now() - startTime)) * multiplier
                 if (cpu_usage > 100) {
@@ -251,7 +284,7 @@ export class Instance {
         return new Promise((resolve, reject) => {
             this.client.patch("/1.0/instances/" + this.meta.name, { config: config }).then(data => {
                 this.client.get("/1.0/instances/" + this.meta.name).then(ins => {
-                    
+
                     resolve(new Instance(this.root, this.client, JSON.parse(ins).metadata))
                 }).catch(error => {
                     reject(error)
@@ -266,7 +299,7 @@ export class Instance {
             this.client.post("/1.0/instances/" + this.meta.name, { name: name }).then(data => {
                 this.client.get("/1.0/instances/" + name).then(ins => {
                     console.log(ins)
-                    
+
                     resolve(new Instance(this.root, this.client, JSON.parse(ins).metadata))
                 }).catch(error => {
                     reject(error)
@@ -290,7 +323,7 @@ export class Instance {
                 "wait-for-websocket": true,
                 "width": options.width ? options.width : 0
             }).then(data => {
-                
+
                 var response = JSON.parse(data);
                 var consolePath = response.operation + "/websocket?secret=" + response.metadata.metadata.fds["0"];
                 var controlPath = response.operation + "/websocket?secret=" + response.metadata.metadata.fds["control"];
@@ -311,10 +344,10 @@ export class Instance {
         return new Promise((resolve, reject) => {
             this.client.get('/1.0/instances/' + this.name() + "/backups/" + name).then(data => {
                 console.log(data)
-                
+
                 var response = JSON.parse(data)
                 if (response.status_code != 200) reject(new Error(response.error))
-               resolve(new Backup(this.client, this, response.metadata))
+                resolve(new Backup(this.client, this, response.metadata))
             }).catch(error => {
                 reject(error)
             })

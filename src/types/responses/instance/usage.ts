@@ -1,5 +1,5 @@
 export interface InstanceUsage {
-    state: string,
+    state: "Running" | "Stopped" | "Frozen" | "Error",
     pid: number,
     processes: number,
     cpu: {
@@ -14,12 +14,12 @@ export interface InstanceUsage {
         total: number
     },
     network: {
-       [key: string]: {
-           received: number,
-           sent: number,
-           packets_sent: number,
-           packets_received: number
-       }
+        [key: string]: {
+            received: number,
+            sent: number,
+            packets_sent: number,
+            packets_received: number
+        }
     },
     disk: {
         [key: string]: {
