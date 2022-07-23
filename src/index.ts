@@ -72,7 +72,7 @@ class Client {
     }
     fetchInstances(): Promise<Instance[]> {
         return new Promise((resolve, reject) => {
-            this.client.get('/1.0/instances?recursion=1').then((data) => {
+            this.client.get('/1.0/instances?recursion=2').then((data) => {
 
                 var res = JSON.parse(data)
                 var arr = res.metadata;
