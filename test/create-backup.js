@@ -6,6 +6,7 @@ var c = new x.Client("https://10.17.167.238:8443/", {type: "http", "cert": fs.re
 async function test() {
   console.log(await c.fetchStoragePools())
   var instance = await c.fetchInstance("enormous-polecat")
+  console.log(instance.meta)
   console.log( c.fetchInstance("enormous-polecat") instanceof Promise)
   console.log((await instance.fetchNetworks()))
 }

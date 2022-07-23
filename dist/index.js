@@ -67,7 +67,7 @@ class Client {
     }
     fetchInstance(name) {
         return new Promise((resolve, reject) => {
-            this.client.get('/1.0/instances/' + name).then(data => {
+            this.client.get('/1.0/instances/' + name + "?recursion=1").then(data => {
                 resolve(new instance_1.Instance(this, this.client, JSON.parse(data).metadata));
             }).catch(error => {
                 reject(error);
@@ -322,7 +322,7 @@ class Client {
     }
     fetchStoragePool(name) {
         return new Promise((resolve, reject) => {
-            this.client.get('/1.0/storagepools/' + name).then((data) => {
+            this.client.get('/1.0/storage-pools/' + name).then((data) => {
                 resolve(new storage_pool_1.StoragePool(this, this.client, JSON.parse(data).metadata));
             }).catch(error => {
                 reject(error);
@@ -331,7 +331,7 @@ class Client {
     }
     fetchStoragePools() {
         return new Promise((resolve, reject) => {
-            this.client.get('/1.0/storagepools?recursion=1').then((data) => {
+            this.client.get('/1.0/storage-pools?recursion=1').then((data) => {
                 var res = JSON.parse(data);
                 var arr = res.metadata;
                 var result = [];
