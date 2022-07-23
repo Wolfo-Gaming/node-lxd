@@ -164,7 +164,7 @@ class Instance {
                 var cpu_ns = response.metadata.cpu.usage;
                 var memory_used = response.metadata.memory.usage;
                 var memory_total = this.meta.config["limits.memory"] ? (0, bytesparser_1.parseBytes)(this.meta.config["limits.memory"]) : system_data.metadata.memory.total;
-                var interface_keys = Object.keys(response.metadata.network);
+                var interface_keys = response.metadata.status == "Stopped" ? Object.keys(response.metadata.network) : [];
                 var s = this.meta.config["limits.cpu"];
                 var cpuCount = s ? parseFloat(s) : system_data.metadata.cpu.total; // thats probs why i did / 2
                 console.log(cpuCount);
