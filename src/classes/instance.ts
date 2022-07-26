@@ -7,6 +7,14 @@ import { InstanceUsage } from "../types/responses/instance/usage";
 import { parseBytes } from "../util/bytesparser";
 import { RawData } from "ws";
 import { Backup } from "./backup";
+import fs from "fs"
+import http from "https"
+interface DownloadEvents {
+    'open': () => void;
+    'finish': () => void;
+    'progress': (progress: { bytes: { sent: number, total: number }, percent: number }) => void;
+}
+
 export class Instance {
     private client: UNIX | HTTP;
     meta: InstanceMeta;
@@ -46,6 +54,106 @@ export class Instance {
     fetchStatus(): InstanceStatus {
         return this.meta.status;
     }
+    downloadFile(path: string, writeStream: fs.WriteStream): Promise<{ type: 'file', events: TypedEmitter<DownloadEvents> } | { type: 'dir', list: string[] }> {
+        return new Promise(async (resolve, reject) => {
+            if (!path) throw new Error('Path not defined')
+            var events = new TypedEmitter<DownloadEvents>()
+            const url = encodeURI("/1.0/instances/" + this.meta.name + "/files?path=" + path)
+            const { data, headers } = await this.client.axios.get(url,{
+                responseType: 'stream'
+            })
+            events.emit('open')
+            const totalLength = headers['content-length']
+            var done = 0
+            if (data.headers["content-type"] == "application/json") {
+                data.on('data', (chunk: any) => {
+                    resolve({
+                        type: 'dir',
+                        list: JSON.parse(chunk.toString()).metadata
+                    })
+                })
+
+            } else {
+                data.on('data', (chunk: any) => {
+                    done += chunk.length;
+                    var percent = (done * 100) / parseFloat(totalLength)
+                    var progress = {
+                        bytes: {
+                            sent: done,
+                            total: parseFloat(totalLength)
+                        },
+                        percent: percent
+                    }
+                    events.emit('progress', progress)
+                    if (progress.percent == 100) {
+                        events.emit('finish')
+                    }
+                })
+                data.pipe(writeStream)
+                resolve({ type: 'file', events })
+            }
+        })
+
+
+    }
+    uploadFile(ReadStream: fs.ReadStream, destPath: string): Promise<TypedEmitter<DownloadEvents>> {
+		return new Promise(async (resolve, reject) => {
+            
+			var events = new TypedEmitter<DownloadEvents>()
+			var parsedURL = new URL(this.root.url)
+			if (this.root.options.type == "unix") {
+				var optss: any = {
+					rejectUnauthorized: false,
+					method: "POST",
+					socketPath: this.root.url,
+					path: encodeURI("/1.0/instances/" + this.meta.name + "/files?path=" + destPath),
+					headers: {
+						"Content-Type": `application/octet-stream`
+					},
+				}
+			} else if (this.root.options.type == "http") {
+				var optss: any = {
+					cert: this.root.options.cert,
+					key: this.root.options.key,
+					rejectUnauthorized: this.root.options.rejectUnauthorized,
+					method: "POST",
+					hostname: parsedURL.hostname,
+					port: parsedURL.port,
+					path: encodeURI("/1.0/instances/" + this.meta.name + "/files?path=" + destPath),
+					headers: {
+						"Content-Type": `application/octet-stream`
+					},
+				}
+			}
+			var request = http.request(optss, function (response) {
+				response.on('error', (err) => {
+					reject(err)
+				})
+			});
+			request.on('error', error => {
+				reject(error)
+			})
+			var bytes = 0
+			var size = fs.lstatSync(ReadStream.path).size;
+			ReadStream.on('data', (chunk) => {
+				bytes += chunk.length;
+				var percent = ((bytes) * 100) / size
+				var data = {
+					bytes: {
+						sent: bytes,
+						total: size
+					},
+					percent: percent
+				}
+				events.emit('progress', data)
+				if (data.percent == 100) {
+					events.emit("finish")
+				}
+			}).pipe(request)
+			resolve(events)
+		})
+
+	}
     fetchLogs(name?: string): Promise<string> {
         if (!name) name = 'lxc.log';
         return new Promise((resolve, reject) => {

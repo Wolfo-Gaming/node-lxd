@@ -14,9 +14,18 @@ import { ProfileMetadata } from './types/responses/profile/metadata';
 import { ProjectMetadata } from './types/responses/project/metadata';
 import { ProjectState } from './types/responses/project/state';
 import { Backup } from './classes/backup';
+import Image from './classes/image';
 declare class Client {
     private client;
+    url: string;
     caluclateUsingHyperthreading: boolean;
+    options: {
+        type: "http" | "unix";
+        rejectUnauthorized?: boolean;
+        cert?: Buffer;
+        key?: Buffer;
+        caluclateUsingHyperthreading?: boolean;
+    };
     constructor(url: string, options: {
         type: "http" | "unix";
         rejectUnauthorized?: boolean;
@@ -63,5 +72,7 @@ declare class Client {
     deleteProject(name: string): Promise<void>;
     fetchStoragePool(name: string): Promise<StoragePool>;
     fetchStoragePools(): Promise<StoragePool[]>;
+    fetchImage(fingerprint: string): Promise<Image>;
+    fetchImages(): Promise<Image[]>;
 }
 export { HTTP, UNIX, Client, Network, StoragePool, Instance, Backup };

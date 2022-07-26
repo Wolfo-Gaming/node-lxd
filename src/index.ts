@@ -13,16 +13,20 @@ import { ProfileMetadata } from './types/responses/profile/metadata';
 import { ProjectMetadata } from './types/responses/project/metadata';
 import { ProjectState } from './types/responses/project/state';
 import { Backup } from './classes/backup';
-
+import Image from './classes/image'
 class Client {
     private client: HTTP | UNIX;
+    url: string;
     caluclateUsingHyperthreading: boolean;
+    options: { type: "http" | "unix", rejectUnauthorized?: boolean, cert?: Buffer, key?: Buffer, caluclateUsingHyperthreading?: boolean };
     constructor(url: string, options: { type: "http" | "unix", rejectUnauthorized?: boolean, cert?: Buffer, key?: Buffer, caluclateUsingHyperthreading?: boolean }) {
         if (!options.caluclateUsingHyperthreading || options.caluclateUsingHyperthreading == true) {
             this.caluclateUsingHyperthreading = true
         } else if (options.caluclateUsingHyperthreading == false) {
             this.caluclateUsingHyperthreading = false;
         }
+        this.options = options;
+        this.url = url;
         if (options.type == "http") {
             if (!options.cert) throw new Error('Certificate not specified');
             if (!options.key) throw new Error('Key not specified');
@@ -350,6 +354,31 @@ class Client {
                 var result = []
                 for (const pool of arr) {
                     result.push(new StoragePool(this, this.client, pool))
+                }
+                resolve(result)
+            }).catch(error => {
+                reject(error)
+            })
+        })
+    }
+    // fetch images
+    fetchImage(fingerprint: string): Promise<Image> {
+        return new Promise((resolve, reject) => {
+            this.client.get('/1.0/images/' + fingerprint).then((data) => {
+                resolve(new Image(this, this.client, JSON.parse(data).metadata))
+            }).catch(error => {
+                reject(error)
+            })
+        })
+    }
+    fetchImages(): Promise<Image[]> {
+        return new Promise((resolve, reject) => {
+            this.client.get('/1.0/images?recursion=1').then((data) => {
+                var res = JSON.parse(data)
+                var arr = res.metadata;
+                var result = []
+                for (const img of arr) {
+                    result.push(new Image(this, this.client, img))
                 }
                 resolve(result)
             }).catch(error => {

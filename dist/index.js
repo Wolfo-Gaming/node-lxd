@@ -15,6 +15,7 @@ const storage_pool_1 = require("./classes/storage-pool");
 Object.defineProperty(exports, "StoragePool", { enumerable: true, get: function () { return storage_pool_1.StoragePool; } });
 const backup_1 = require("./classes/backup");
 Object.defineProperty(exports, "Backup", { enumerable: true, get: function () { return backup_1.Backup; } });
+const image_1 = tslib_1.__importDefault(require("./classes/image"));
 class Client {
     constructor(url, options) {
         if (!options.caluclateUsingHyperthreading || options.caluclateUsingHyperthreading == true) {
@@ -23,6 +24,8 @@ class Client {
         else if (options.caluclateUsingHyperthreading == false) {
             this.caluclateUsingHyperthreading = false;
         }
+        this.options = options;
+        this.url = url;
         if (options.type == "http") {
             if (!options.cert)
                 throw new Error('Certificate not specified');
@@ -337,6 +340,31 @@ class Client {
                 var result = [];
                 for (const pool of arr) {
                     result.push(new storage_pool_1.StoragePool(this, this.client, pool));
+                }
+                resolve(result);
+            }).catch(error => {
+                reject(error);
+            });
+        });
+    }
+    // fetch images
+    fetchImage(fingerprint) {
+        return new Promise((resolve, reject) => {
+            this.client.get('/1.0/images/' + fingerprint).then((data) => {
+                resolve(new image_1.default(this, this.client, JSON.parse(data).metadata));
+            }).catch(error => {
+                reject(error);
+            });
+        });
+    }
+    fetchImages() {
+        return new Promise((resolve, reject) => {
+            this.client.get('/1.0/images?recursion=1').then((data) => {
+                var res = JSON.parse(data);
+                var arr = res.metadata;
+                var result = [];
+                for (const img of arr) {
+                    result.push(new image_1.default(this, this.client, img));
                 }
                 resolve(result);
             }).catch(error => {

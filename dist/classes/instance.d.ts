@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { InstanceConfig, InstanceMeta, InstanceType, InstanceStatus, InstancePowerState } from "../types/configs/instance";
 import { Client, HTTP, UNIX } from "..";
 import { TypedEmitter } from "tiny-typed-emitter";
@@ -5,6 +6,18 @@ import { BackupEvents, InstanceIP } from "../types/types";
 import { ExecEmitter } from "./exec";
 import { InstanceUsage } from "../types/responses/instance/usage";
 import { Backup } from "./backup";
+import fs from "fs";
+interface DownloadEvents {
+    'open': () => void;
+    'finish': () => void;
+    'progress': (progress: {
+        bytes: {
+            sent: number;
+            total: number;
+        };
+        percent: number;
+    }) => void;
+}
 export declare class Instance {
     private client;
     meta: InstanceMeta;
@@ -30,6 +43,14 @@ export declare class Instance {
      * Get instance type
      */
     fetchStatus(): InstanceStatus;
+    downloadFile(path: string, writeStream: fs.WriteStream): Promise<{
+        type: 'file';
+        events: TypedEmitter<DownloadEvents>;
+    } | {
+        type: 'dir';
+        list: string[];
+    }>;
+    uploadFile(ReadStream: fs.ReadStream, destPath: string): Promise<TypedEmitter<DownloadEvents>>;
     fetchLogs(name?: string): Promise<string>;
     listLogs(): Promise<string[]>;
     createBackup(name: string, options?: {
@@ -82,3 +103,4 @@ export declare class Instance {
     }): Promise<ExecEmitter>;
     fetchBackup(name: string): Promise<Backup>;
 }
+export {};

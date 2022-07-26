@@ -6,6 +6,8 @@ const tiny_typed_emitter_1 = require("tiny-typed-emitter");
 const exec_1 = require("./exec");
 const bytesparser_1 = require("../util/bytesparser");
 const backup_1 = require("./backup");
+const fs_1 = tslib_1.__importDefault(require("fs"));
+const https_1 = tslib_1.__importDefault(require("https"));
 class Instance {
     constructor(root, client, data) {
         this.client = client;
@@ -41,6 +43,104 @@ class Instance {
      */
     fetchStatus() {
         return this.meta.status;
+    }
+    downloadFile(path, writeStream) {
+        return new Promise((resolve, reject) => tslib_1.__awaiter(this, void 0, void 0, function* () {
+            if (!path)
+                throw new Error('Path not defined');
+            var events = new tiny_typed_emitter_1.TypedEmitter();
+            const url = encodeURI("/1.0/instances/" + this.meta.name + "/files?path=" + path);
+            const { data, headers } = yield this.client.axios.get(url, {
+                responseType: 'stream'
+            });
+            events.emit('open');
+            const totalLength = headers['content-length'];
+            var done = 0;
+            if (data.headers["content-type"] == "application/json") {
+                data.on('data', (chunk) => {
+                    resolve({
+                        type: 'dir',
+                        list: JSON.parse(chunk.toString()).metadata
+                    });
+                });
+            }
+            else {
+                data.on('data', (chunk) => {
+                    done += chunk.length;
+                    var percent = (done * 100) / parseFloat(totalLength);
+                    var progress = {
+                        bytes: {
+                            sent: done,
+                            total: parseFloat(totalLength)
+                        },
+                        percent: percent
+                    };
+                    events.emit('progress', progress);
+                    if (progress.percent == 100) {
+                        events.emit('finish');
+                    }
+                });
+                data.pipe(writeStream);
+                resolve({ type: 'file', events });
+            }
+        }));
+    }
+    uploadFile(ReadStream, destPath) {
+        return new Promise((resolve, reject) => tslib_1.__awaiter(this, void 0, void 0, function* () {
+            var events = new tiny_typed_emitter_1.TypedEmitter();
+            var parsedURL = new URL(this.root.url);
+            if (this.root.options.type == "unix") {
+                var optss = {
+                    rejectUnauthorized: false,
+                    method: "POST",
+                    socketPath: this.root.url,
+                    path: encodeURI("/1.0/instances/" + this.meta.name + "/files?path=" + destPath),
+                    headers: {
+                        "Content-Type": `application/octet-stream`
+                    },
+                };
+            }
+            else if (this.root.options.type == "http") {
+                var optss = {
+                    cert: this.root.options.cert,
+                    key: this.root.options.key,
+                    rejectUnauthorized: this.root.options.rejectUnauthorized,
+                    method: "POST",
+                    hostname: parsedURL.hostname,
+                    port: parsedURL.port,
+                    path: encodeURI("/1.0/instances/" + this.meta.name + "/files?path=" + destPath),
+                    headers: {
+                        "Content-Type": `application/octet-stream`
+                    },
+                };
+            }
+            var request = https_1.default.request(optss, function (response) {
+                response.on('error', (err) => {
+                    reject(err);
+                });
+            });
+            request.on('error', error => {
+                reject(error);
+            });
+            var bytes = 0;
+            var size = fs_1.default.lstatSync(ReadStream.path).size;
+            ReadStream.on('data', (chunk) => {
+                bytes += chunk.length;
+                var percent = ((bytes) * 100) / size;
+                var data = {
+                    bytes: {
+                        sent: bytes,
+                        total: size
+                    },
+                    percent: percent
+                };
+                events.emit('progress', data);
+                if (data.percent == 100) {
+                    events.emit("finish");
+                }
+            }).pipe(request);
+            resolve(events);
+        }));
     }
     fetchLogs(name) {
         if (!name)
