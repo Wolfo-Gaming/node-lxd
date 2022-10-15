@@ -85,6 +85,8 @@ class Client {
                     result.push(new Instance(this, this.client, inst))
                 }
                 resolve(result)
+            }).catch(error => {
+                reject(error)
             })
         })
     }
