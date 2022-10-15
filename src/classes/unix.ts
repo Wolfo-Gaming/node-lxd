@@ -8,7 +8,7 @@ export class UNIX {
     get(url: string, config?: AxiosRequestConfig): Promise<any> {
         return new Promise((resolve, reject) => {
             this.axios.get(url, config).then((data) => {
-                if (data.status == 403) {
+                if(data.status == 403) {
                     reject(data);
                 } else {
                     resolve(data.data);
@@ -21,7 +21,7 @@ export class UNIX {
     post(url: string, data: any, config?: AxiosRequestConfig): Promise<any> {
         return new Promise((resolve, reject) => {
             this.axios.post(url, JSON.stringify(data), config).then((data) => {
-                if (data.status == 403) {
+                if(data.status == 403) {
                     reject(data);
                 } else {
                     resolve(data.data);
@@ -34,7 +34,7 @@ export class UNIX {
     put(url: string, data: any, config?: AxiosRequestConfig): Promise<any> {
         return new Promise((resolve, reject) => {
             this.axios.put(url, JSON.stringify(data), config).then((data) => {
-                if (data.status == 403) {
+                if(data.status == 403) {
                     reject(data);
                 } else {
                     resolve(data.data);
@@ -47,7 +47,7 @@ export class UNIX {
     patch(url: string, data: any, config?: AxiosRequestConfig): Promise<any> {
         return new Promise((resolve, reject) => {
             this.axios.patch(url, JSON.stringify(data), config).then((data) => {
-                if (data.status == 403) {
+                if(data.status == 403) {
                     reject(data);
                 } else {
                     resolve(data.data);
@@ -60,7 +60,7 @@ export class UNIX {
     delete(url: string, config?: AxiosRequestConfig): Promise<any> {
         return new Promise((resolve, reject) => {
             this.axios.delete(url, config).then((data) => {
-                if (data.status == 403) {
+                if(data.status == 403) {
                     reject(data);
                 } else {
                     resolve(data.data);
@@ -74,7 +74,7 @@ export class UNIX {
         return new WebSocket("ws+unix://" + this.socket.pathname + ":" + url)
     }
     constructor(socket: string) {
-        this.socket = new URL("unix://" + socket);
+        this.socket = new URL("unix://"+ socket);
         this.axios = new Axios({
             socketPath: socket,
         })

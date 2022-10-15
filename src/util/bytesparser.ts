@@ -6,7 +6,7 @@ var MB_divide = 1000000;
 export function parseBytes(humanReadable: string): number {
     
     var size = parseFloat(humanReadable.split('').map(s => {
-        console.log(isNaN(parseFloat(s)))
+       // console.log(isNaN(parseFloat(s)))
         if (isNaN(parseFloat(s))) {
             if (s == ".") {
                 return s;
@@ -17,7 +17,7 @@ export function parseBytes(humanReadable: string): number {
         }
     }).filter(n => n).join(''))
     var unit = humanReadable.split('').map(s => {
-        console.log(isNaN(parseFloat(s)))
+       // console.log(isNaN(parseFloat(s)))
         if (isNaN(parseFloat(s)) != true) {
            return;
         } else {
@@ -27,7 +27,7 @@ export function parseBytes(humanReadable: string): number {
             return s
         }
     }).filter(n => n).join('')
-    console.log({unit,size})
+    //console.log({unit,size})
     if (unit == "GB") {
         return size * GB_divide
     } else if (unit == "MB") {

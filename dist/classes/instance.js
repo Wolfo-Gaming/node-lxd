@@ -187,7 +187,7 @@ class Instance {
                     return tslib_1.__awaiter(this, void 0, void 0, function* () {
                         var data = JSON.parse(d.toString());
                         if (data.metadata.id == operationID) {
-                            console.log(data);
+                            //console.log(data)
                             if (data.metadata.status == "Failure") {
                                 waiter.emit("error", new Error(data.metadata.err));
                                 events.removeAllListeners();
@@ -195,14 +195,14 @@ class Instance {
                             }
                             if (data.metadata.status == "Success") {
                                 backup_done = true;
-                                console.log(data.metadata.resources.backups[0].replace('/1.0/', '/1.0/instances/hah1s/'));
+                                // console.log(data.metadata.resources.backups[0].replace('/1.0/', '/1.0/instances/hah1s/'))
                                 var backup = yield self.client.get(data.metadata.resources.backups[0].replace('/1.0/', '/1.0/instances/hah1s/'));
                                 var s = new backup_1.Backup(self.client, self, JSON.parse(backup).metadata);
                                 waiter.emit("finished", s);
                                 events.removeAllListeners();
                                 events.close();
                             }
-                            console.log(JSON.stringify(data));
+                            //console.log(JSON.stringify(data))
                             if (!data.metadata.metadata)
                                 return;
                             if (data.metadata.metadata.create_backup_progress && backup_done == false) {
@@ -227,20 +227,28 @@ class Instance {
             if (!interfaceName)
                 interfaceName = "eth0";
             this.client.get('/1.0/instances/' + this.meta.name + "/state").then((data) => tslib_1.__awaiter(this, void 0, void 0, function* () {
-                var response = JSON.parse(data);
-                if (version == "v4") {
-                    var int = response.metadata.network[interfaceName];
-                    var ip = int.addresses.find((address) => {
-                        return (address.scope == "global" && address.family == "inet");
-                    });
-                    resolve(ip);
+                try {
+                    var response = JSON.parse(data);
+                    if (response.metadata.network == null) {
+                        return resolve({ "family": "inet", "address": "0.0.0.0", "netmask": "24", "scope": "global" });
+                    }
+                    if (version == "v4") {
+                        var int = response.metadata.network[interfaceName];
+                        var ip = int.addresses.find((address) => {
+                            return (address.scope == "global" && address.family == "inet");
+                        });
+                        resolve(ip);
+                    }
+                    if (version == "v6") {
+                        var int = response.metadata.network[interfaceName];
+                        var ip = int.addresses.find((address) => {
+                            return (address.scope == "global" && address.family == "inet6");
+                        });
+                        resolve(ip);
+                    }
                 }
-                if (version == "v6") {
-                    var int = response.metadata.network[interfaceName];
-                    var ip = int.addresses.find((address) => {
-                        return (address.scope == "global" && address.family == "inet6");
-                    });
-                    resolve(ip);
+                catch (error) {
+                    reject(error);
                 }
             })).catch(error => {
                 reject(error);
@@ -267,7 +275,7 @@ class Instance {
                 var interface_keys = response.metadata.status == "Stopped" ? [] : Object.keys(response.metadata.network);
                 var s = this.meta.config["limits.cpu"];
                 var cpuCount = s ? parseFloat(s) : system_data.metadata.cpu.total; // thats probs why i did / 2
-                console.log(cpuCount);
+                //console.log(cpuCount)
                 if (this.root.caluclateUsingHyperthreading == false)
                     var thread_multiplier = 1;
                 if (this.root.caluclateUsingHyperthreading == true)
@@ -275,7 +283,7 @@ class Instance {
                 var multiplier = (100000 / cpuCount) * thread_multiplier;
                 var startTime = Date.now();
                 var u = JSON.parse(yield this.client.get("/1.0/instances/" + this.meta.name + "/state"));
-                console.log(u);
+                //console.log(u)
                 var usage1 = u.metadata.cpu.usage / 1000000000;
                 var usage2 = (JSON.parse(yield this.client.get("/1.0/instances/" + this.meta.name + "/state")).metadata.cpu.usage / 1000000000);
                 var cpu_usage = ((usage2 - usage1) / (Date.now() - startTime)) * multiplier;
@@ -321,8 +329,12 @@ class Instance {
      */
     setStatus(status, force, timeout) {
         return new Promise((resolve, reject) => {
-            this.client.put('/1.0/instances/' + this.meta.name + "/state", {}).then(data => {
-                resolve();
+            this.client.put('/1.0/instances/' + this.meta.name + "/state", {
+                "action": status,
+                "force": force !== null && force !== void 0 ? force : false,
+                "timeout": timeout !== null && timeout !== void 0 ? timeout : 30
+            }).then(data => {
+                resolve(data);
             }).catch(error => {
                 reject(error);
             });
@@ -345,7 +357,7 @@ class Instance {
         return new Promise((resolve, reject) => {
             this.client.post("/1.0/instances/" + this.meta.name, { name: name }).then(data => {
                 this.client.get("/1.0/instances/" + name).then(ins => {
-                    console.log(ins);
+                    // console.log(ins)
                     resolve(new Instance(this.root, this.client, JSON.parse(ins).metadata));
                 }).catch(error => {
                     reject(error);
@@ -391,7 +403,7 @@ class Instance {
     fetchBackup(name) {
         return new Promise((resolve, reject) => {
             this.client.get('/1.0/instances/' + this.name() + "/backups/" + name).then(data => {
-                console.log(data);
+                //console.log(data)
                 var response = JSON.parse(data);
                 if (response.status_code != 200)
                     reject(new Error(response.error));
