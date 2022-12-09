@@ -112,8 +112,8 @@ class Client {
                     source: {
                         type: "image",
                         alias: options.image,
-                        "server": options.imageServer.url ? options.imageServer.url : "https://images.linuxcontainers.org/",
-                        "protocol": options.imageServer.protocol ? options.imageServer.protocol : "simplestreams"
+                        "server": (options.imageServer && options.imageServer.url) ? options.imageServer.url : "https://images.linuxcontainers.org/",
+                        "protocol": (options.imageServer && options.imageServer.protocol) ? options.imageServer.protocol : "simplestreams"
                     },
                     type: options.type ? options.type : "container",
                     ...options.raw
