@@ -37,3 +37,6 @@ client.createInstance("improved-elk", {
 })
 
 ```
+## Optional dependencies ##
+
+SFTP support: [node-lxd-sftp](https://github.com/Wolfo-Gaming/node-lxd-sftp)
