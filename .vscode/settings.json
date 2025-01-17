@@ -1,0 +1,6 @@
+{
+    "tsCompileOnSave.enabled": true,
+    "tsCompileOnSave.prefixes": [ 
+        "src/**"
+    ]
+}

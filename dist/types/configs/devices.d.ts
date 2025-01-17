@@ -1,0 +1,107 @@
+export interface DeviceConfigs {
+    'disk': {
+        'limits.read': string;
+        'limits.write': string;
+        'limits.max': string;
+        'path': string;
+        'source': string;
+        'required': boolean;
+        'readonly': boolean;
+        'size': string;
+        'size.state': string;
+        'recursive': boolean;
+        'pool': string;
+        'propagation': string;
+        'shift': boolean;
+        'raw.mount.options': string;
+        'ceph.username': string;
+    };
+    'nic': {
+        'security.ipv4_filtering': boolean;
+        'security.ipv6_filtering': boolean;
+        'vlan.tagged': number;
+        'security.port_isolation': boolean;
+        'security.mac_filtering': boolean;
+        'network': string;
+        'acceleration': string;
+        'ipv4.routes.external': string;
+        'ipv6.routes.external': string;
+        'security.acls': string;
+        'security.acls.default.ingress.action': string;
+        'security.acls.default.egress.action': string;
+        'security.acls.default.ingress.logged': boolean;
+        'security.acls.default.egress.logged': boolean;
+        'maas.subnet.ipv4': string;
+        'maas.subnet.ipv6': string;
+        'mode': string;
+        'boot.priority': number;
+        'parent': string;
+        'name': string;
+        'host_name': string;
+        'mtu': number;
+        'hwaddr': string;
+        'limits.ingress': string;
+        'limits.egress': string;
+        'limits.max': string;
+        'ipv4.address': string;
+        'ipv4.routes': string;
+        'ipv4.gateway': string;
+        'ipv4.host_address': string;
+        'ipv4.host_table': number;
+        'ipv4.neighbor_probe': boolean;
+        'ipv6.address': string;
+        'ipv6.routes': string;
+        'ipv6.gateway': string;
+        'ipv6.host_address': string;
+        'ipv6.host_table': number;
+        'ipv6.neighbor_probe': boolean;
+        'vlan': number;
+        'gvrp': boolean;
+    };
+    'unix-char': {
+        'source': string;
+        'path': string;
+        'major': number;
+        'minor': number;
+        'uid': number;
+        'gid': number;
+    };
+    'unix-block': {
+        'source': string;
+        'path': string;
+        'major': number;
+        'minor': number;
+        'uid': number;
+        'gid': number;
+        'mode': number;
+        'required': boolean;
+    };
+    'usb': {
+        'vendorid': string;
+        'productid': string;
+        'uid': number;
+        'gid': number;
+        'mode': number;
+        'required': boolean;
+    };
+    'proxy': {
+        'listen': string;
+        'connect': string;
+        'bind': string;
+        'uid': number;
+        'gid': number;
+        'mode': number;
+        'nat': boolean;
+        'proxyprotocol': boolean;
+        'security.uid': number;
+        'security.gid': number;
+    };
+    'unix-hotplug': {
+        'vendorid': string;
+        'productid': string;
+        'uid': number;
+        'gid': number;
+        'mode': number;
+        'required': boolean;
+    };
+}
